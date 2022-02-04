@@ -345,19 +345,19 @@ export class DuplicityWrapper {
             console.log(`cmd = '${cmd}'`);
             let sp = spawn('duplicity', args, opts);
 
-            sp.stdout.on("data", data => {
+            sp.stdout.on("data", (data: any) => {
                 out += data;
             });
 
-            sp.stderr.on("data", data => {
+            sp.stderr.on("data", (data: any) => {
                 errs += data;
             });
 
-            sp.on('error', (error) => {
+            sp.on('error', (error: any) => {
                 reject(error);
             });
 
-            sp.on("close", code => {
+            sp.on("close", (code: any) => {
                 resolve({ rc: code, stdout: out, stderr: errs });
             });
         });
