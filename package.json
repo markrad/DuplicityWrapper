@@ -11,7 +11,7 @@
   "author": "Mark Radbourne",
   "license": "MIT",
   "dependencies": {
-    "@types/node": "^17.0.12",
+    "@types/node": "^17.0.12"
   },
   "devDependencies": {
     "typescript": "^4.5.5"
