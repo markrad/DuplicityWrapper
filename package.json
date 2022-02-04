@@ -1,0 +1,19 @@
+{
+  "name": "nodeduplicity",
+  "version": "1.0.0",
+  "description": "Wrapper for duplicity CLI.",
+  "main": "src/output/index.js",
+  "scripts": {
+    "install": "npm run build",
+    "build": "tsc",
+    "test": "node output/test/index.js"
+  },
+  "author": "Mark Radbourne",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.12",
+    "typescript": "^4.5.5"
+  }
+}
