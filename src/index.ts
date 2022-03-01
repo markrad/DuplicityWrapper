@@ -373,6 +373,9 @@ export class DuplicityWrapper {
         // let ChangedFileSize = parseInt(/\nChangedFileSize (\d*)/.exec(output)[1]);
         // let DeltaEntries = parseInt(/\nDeltaEntries (\d*)/.exec(output)[1]);
         // let TotalDestinationSizeChange = parseInt(/\nTotalDestinationSizeChange (\d*)/.exec(output)[1]);
+        if (result.rc != 0) {
+            throw new Error(`Return code = ${result.rc}: ${result.stderr}`);
+        }
         try {
             let ret: FullResults = {
                 rc: result.rc,

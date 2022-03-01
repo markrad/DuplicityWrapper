@@ -48,9 +48,17 @@ async function main(): Promise<void> {
 
     let test = new DuplicityWrapper();
 
+
     console.log(process.cwd());
     console.log(path.resolve(__dirname, '../..'));
     let result: FullResults;
+    try {
+        result = await test.commandFull({ target: './nosuchdirectory', url: 'file://testout', passPhrase: 'markmark', cwd: path.resolve(__dirname, '../..'), extraArgs: '--verbosity info' } );
+        assert(true, 'Should have thrown an error');
+    }
+    catch (err: any) {
+        console.log(`Expected error thrown: ${err.message}`);
+    }
     result = await test.commandFull({ target: './testin', url: 'file://testout', passPhrase: 'markmark', cwd: path.resolve(__dirname, '../..'), extraArgs: '--verbosity info' } );
     console.log(`Returned ${result.rc} full = ${result.FullBackup }`);
     console.log(result.Output.stdout);
