@@ -1,6 +1,6 @@
 import { assert } from 'console';
 import path from 'path';
-import { FullResults, VerifyResults, DuplicityWrapper, ListCurrentFilesResults, ListFileEntry, TimeSpanOption, RemoveOlderThanResults, RemoveAllButNFullResults } from '../src/index'
+import { FullResults, VerifyResults, DuplicityWrapper, ListCurrentFilesResults, ListFileEntry, TimeSpanOption, RemoveOlderThanResults, RemoveAllButNFullResults } from '..'
 
 async function main(): Promise<void> {
     const app = process.env.DUPLICITY_PATH ?? '/usr/bin/duplicity';

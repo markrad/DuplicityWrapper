@@ -1,12 +1,13 @@
 {
+  "type": "commonjs",
   "name": "nodeduplicity",
   "version": "1.0.0",
   "description": "Wrapper for duplicity CLI.",
-  "main": "src/output/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "install": "npm run build",
     "build": "tsc",
-    "test": "node output/test/index.js"
+    "test": "node dist/test/index.js"
   },
   "author": "Mark Radbourne",
   "license": "MIT",

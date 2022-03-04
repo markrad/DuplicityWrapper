@@ -1,7 +1,7 @@
 // import fs from 'fs';
 import { execSync, spawn } from 'child_process';
 import { TimeSpanOption } from './timespanoption';
-export { TimeSpanOption } from '../src/timespanoption'
+export { TimeSpanOption };
 
 export interface CommonOptions {
     url: string;

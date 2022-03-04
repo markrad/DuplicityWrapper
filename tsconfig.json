@@ -11,7 +11,12 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": false,
     "checkJs": false,
-    "outDir": "./output",
+    "outDir": "./dist",
     "declaration": true
-  }
+  },
+  "include": [
+    "test/**/*.ts",
+    "lib/**/*.ts",
+    "index.ts"
+  ]
 }
