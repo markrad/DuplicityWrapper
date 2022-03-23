@@ -12,6 +12,7 @@ export interface CommonOptions {
     name?: string;
     dryRun?: boolean;
     extraArgs?: string | string[];
+    timeout?: number;
 }
 
 export interface SourceOptions extends CommonOptions {
@@ -130,7 +131,7 @@ export class DuplicityWrapper {
                 args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.target, options.url]);
                 let opts: any = { cwd: options.cwd, env: this.checkPassPhrase(options) };
 
-                let rc = await this.runCommand(args, opts);
+                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
                 resolve(this.parseOutput(rc, args[0]));
             }
             catch (err) {
@@ -149,7 +150,7 @@ export class DuplicityWrapper {
                 args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.target, options.url]);
                 let opts: any = { cwd: options.cwd, env: this.checkPassPhrase(options) };
 
-                let rc = await this.runCommand(args, opts);
+                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
                 resolve(this.parseOutput(rc, args[0]));
             }
             catch (err) {
@@ -172,7 +173,7 @@ export class DuplicityWrapper {
                 args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.url, options.target]);
                 let opts: any = { cwd: options.cwd, env: this.checkPassPhrase(options) };
 
-                let rc = await this.runCommand(args, opts);
+                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
                 let matches = /Verify complete: (\d*) files compared, (\d*) /.exec(rc.stdout);
                 let backup = /Last full backup date: (.*)/.exec(rc.stdout);
                 if (matches == null || backup == null) reject(new Error('Unable to parse verify output'));
@@ -201,7 +202,7 @@ export class DuplicityWrapper {
                 let opts: any = { env: this.checkPassPhrase(options) };
                 if (options.cwd) opts['cwd'] = options.cwd;
 
-                let rc = await this.runCommand(args, opts);
+                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
                 let data: ListFileEntry[] = [];
                 let lines = rc.stdout.split('\n').filter((value: string) => DuplicityWrapper.days.includes(value.substring(0, 4)));
                 lines.forEach((value: string) => {
@@ -234,7 +235,7 @@ export class DuplicityWrapper {
                 let opts: any = { env: this.checkPassPhrase(options) };
                 if (options.cwd) opts['cwd'] = options.cwd;
 
-                let rc = await this.runCommand(args, opts);
+                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
                 let data: RemoveOlderThanResults = { rc: rc.rc, requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Entries: [], Output: { stdout: rc.stdout, stderr: rc.stderr} };
                 if (rc.stdout.indexOf('No old backup sets found') > -1) {
                     data.Entries = rc.stdout.split('\n').filter((value: string) => DuplicityWrapper.days.includes(value.substring(0, 4))).map((value) => new Date(value));
@@ -257,7 +258,7 @@ export class DuplicityWrapper {
                 let opts: any = { env: this.checkPassPhrase(options) };
                 if (options.cwd) opts['cwd'] = options.cwd;
 
-                let rc = await this.runCommand(args, opts);
+                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
                 let data: RemoveAllButNFullResults = { rc: rc.rc, requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Output: { stderr: rc.stderr, stdout: rc.stdout} };
                 resolve(data);
             }
@@ -337,16 +338,26 @@ export class DuplicityWrapper {
         return result;
     }
 
-    private async runCommand(args: string[], opts: any): Promise<CommandResult> {
+    private async runCommand(args: string[], opts: any, timeout: number): Promise<CommandResult> {
         return new Promise<CommandResult>((resolve, reject) => {
             let errs = '';
             let out = '';
             let cmd = `duplicity ${args.join(' ')}`;
             console.log(`cmd = '${cmd}'`);
             let sp = spawn('duplicity', args, opts);
+            let timer: NodeJS.Timer = null;
 
+            if (timeout > 0) {
+                timer = setTimeout(() => {
+                    if (sp.exitCode != null) {
+                        sp.kill('SIGTERM');
+                        reject(new Error(`Command ${cmd} timed out - check for input prompt`));
+                    }
+                }, timeout * 1000);
+            }
             sp.stdout.on("data", (data: any) => {
                 out += data;
+                console.log(data);
             });
 
             sp.stderr.on("data", (data: any) => {
@@ -358,6 +369,7 @@ export class DuplicityWrapper {
             });
 
             sp.on("close", (code: any) => {
+                clearTimeout(timer);
                 resolve({ rc: code, stdout: out, stderr: errs });
             });
         });
