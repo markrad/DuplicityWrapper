@@ -357,7 +357,6 @@ export class DuplicityWrapper {
             }
             sp.stdout.on("data", (data: any) => {
                 out += data;
-                console.log(data);
             });
 
             sp.stderr.on("data", (data: any) => {
