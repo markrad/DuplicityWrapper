@@ -1,7 +1,7 @@
 {
   "type": "commonjs",
   "name": "nodeduplicity",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Wrapper for duplicity CLI.",
   "main": "dist/index.js",
   "scripts": {
