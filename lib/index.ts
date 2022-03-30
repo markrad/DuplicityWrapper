@@ -128,11 +128,11 @@ export class DuplicityWrapper {
         return new Promise<FullResults>(async (resolve, reject) => {
             try {
                 let args = ['full'];
-                args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.target, options.url]);
-                let opts: any = { cwd: options.cwd, env: this.checkPassPhrase(options) };
+                args = args.concat(DuplicityWrapper.buildExtraArgs(options.extraArgs), DuplicityWrapper.doCommon(options), [options.target, options.url]);
+                let opts: any = { cwd: options.cwd, env: DuplicityWrapper.checkPassPhrase(options) };
 
-                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
-                resolve(this.parseOutput(rc, args[0]));
+                let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
+                resolve(DuplicityWrapper.parseOutput(rc, args[0]));
             }
             catch (err) {
                 reject(err);
@@ -145,13 +145,13 @@ export class DuplicityWrapper {
             try {
                 let args = ['incr'];
                 if (options.fullIfOlderThan) {
-                    args = args.concat(this.formatTime('--full-if-older-than', options.fullIfOlderThan));
+                    args = args.concat(DuplicityWrapper.formatTime('--full-if-older-than', options.fullIfOlderThan));
                 }
-                args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.target, options.url]);
-                let opts: any = { cwd: options.cwd, env: this.checkPassPhrase(options) };
+                args = args.concat(DuplicityWrapper.buildExtraArgs(options.extraArgs), DuplicityWrapper.doCommon(options), [options.target, options.url]);
+                let opts: any = { cwd: options.cwd, env: DuplicityWrapper.checkPassPhrase(options) };
 
-                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
-                resolve(this.parseOutput(rc, args[0]));
+                let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
+                resolve(DuplicityWrapper.parseOutput(rc, args[0]));
             }
             catch (err) {
                 reject(err);
@@ -167,13 +167,13 @@ export class DuplicityWrapper {
         return new Promise<VerifyResults>(async (resolve, reject) => {
             try {
                 let args = ['verify'];
-                if (options.time) args = args.concat(this.formatTime('--time', options.time));
+                if (options.time) args = args.concat(DuplicityWrapper.formatTime('--time', options.time));
                 if (options.compareData) args.push('--compare-data');
                 // TODO: Implement file-to-restore
-                args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.url, options.target]);
-                let opts: any = { cwd: options.cwd, env: this.checkPassPhrase(options) };
+                args = args.concat(DuplicityWrapper.buildExtraArgs(options.extraArgs), DuplicityWrapper.doCommon(options), [options.url, options.target]);
+                let opts: any = { cwd: options.cwd, env: DuplicityWrapper.checkPassPhrase(options) };
 
-                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
+                let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
                 let matches = /Verify complete: (\d*) files compared, (\d*) /.exec(rc.stdout);
                 let backup = /Last full backup date: (.*)/.exec(rc.stdout);
                 if (matches == null || backup == null) reject(new Error('Unable to parse verify output'));
@@ -196,13 +196,13 @@ export class DuplicityWrapper {
             try {
                 let args = ['list-current-files'];
                 if (options.time) {
-                    args = args.concat(this.formatTime('--time', options.time));
+                    args = args.concat(DuplicityWrapper.formatTime('--time', options.time));
                 }
-                args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [options.url]);
-                let opts: any = { env: this.checkPassPhrase(options) };
+                args = args.concat(DuplicityWrapper.buildExtraArgs(options.extraArgs), DuplicityWrapper.doCommon(options), [options.url]);
+                let opts: any = { env: DuplicityWrapper.checkPassPhrase(options) };
                 if (options.cwd) opts['cwd'] = options.cwd;
 
-                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
+                let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
                 let data: ListFileEntry[] = [];
                 let lines = rc.stdout.split('\n').filter((value: string) => DuplicityWrapper.days.includes(value.substring(0, 4)));
                 lines.forEach((value: string) => {
@@ -229,13 +229,13 @@ export class DuplicityWrapper {
         return new Promise<RemoveOlderThanResults>(async (resolve, reject) => {
             try {
                 let args = ['remove-older-than'];
-                args = args.concat(this.formatTime(null, options.time));
+                args = args.concat(DuplicityWrapper.formatTime(null, options.time));
                 if (options.force) args.push('--force');
-                args = args.concat(this.buildExtraArgs(options.extraArgs), this.doCommon(options), [ options.url ]);
-                let opts: any = { env: this.checkPassPhrase(options) };
+                args = args.concat(DuplicityWrapper.buildExtraArgs(options.extraArgs), DuplicityWrapper.doCommon(options), [ options.url ]);
+                let opts: any = { env: DuplicityWrapper.checkPassPhrase(options) };
                 if (options.cwd) opts['cwd'] = options.cwd;
 
-                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
+                let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
                 let data: RemoveOlderThanResults = { rc: rc.rc, requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Entries: [], Output: { stdout: rc.stdout, stderr: rc.stderr} };
                 if (rc.stdout.indexOf('No old backup sets found') > -1) {
                     data.Entries = rc.stdout.split('\n').filter((value: string) => DuplicityWrapper.days.includes(value.substring(0, 4))).map((value) => new Date(value));
@@ -255,10 +255,10 @@ export class DuplicityWrapper {
                 args = args.concat(options.count.toString());
                 if (options.force) args.push('--force');
                 args.push(options.url);
-                let opts: any = { env: this.checkPassPhrase(options) };
+                let opts: any = { env: DuplicityWrapper.checkPassPhrase(options) };
                 if (options.cwd) opts['cwd'] = options.cwd;
 
-                let rc = await this.runCommand(args, opts, options.timeout ?? 0);
+                let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
                 let data: RemoveAllButNFullResults = { rc: rc.rc, requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Output: { stderr: rc.stderr, stdout: rc.stdout} };
                 resolve(data);
             }
@@ -286,7 +286,7 @@ export class DuplicityWrapper {
         })
     }
 
-    private checkPassPhrase(options: CommonOptions): any {
+    private static checkPassPhrase(options: CommonOptions): any {
         let result = { ...process.env };
 
         if (options && options?.passPhrase) {
@@ -299,7 +299,7 @@ export class DuplicityWrapper {
         return result;
     }
 
-    private doCommon(common: CommonOptions): string[] {
+    private static doCommon(common: CommonOptions): string[] {
         let commonOptions: string[] = [];
 
         if (common) {
@@ -312,12 +312,12 @@ export class DuplicityWrapper {
         return commonOptions;
     }
 
-    private buildExtraArgs(args: string | string[]): string[] {
+    private static buildExtraArgs(args: string | string[]): string[] {
         let extraArgs = args ?? [];
         return Array.isArray(extraArgs) ? extraArgs : extraArgs.split(' ');
     }
 
-    private formatTime(optionName: string, value: Date | TimeSpanOption): string[] {
+    private static formatTime(optionName: string, value: Date | TimeSpanOption): string[] {
         let olderThan: Date;
         if (value instanceof TimeSpanOption) {
             olderThan = value.subtractFromDate(new Date());
@@ -338,7 +338,7 @@ export class DuplicityWrapper {
         return result;
     }
 
-    private async runCommand(args: string[], opts: any, timeout: number): Promise<CommandResult> {
+    private static async runCommand(args: string[], opts: any, timeout: number): Promise<CommandResult> {
         return new Promise<CommandResult>((resolve, reject) => {
             let errs = '';
             let out = '';
@@ -374,7 +374,7 @@ export class DuplicityWrapper {
         });
     }
 
-    private parseOutput(result: CommandResult, command: string): FullResults {
+    private static parseOutput(result: CommandResult, command: string): FullResults {
         // let SourceFiles = parseFloat(/\nSourceFiles (\d*)/.exec(output)[1]);
         // let SourceFileSize = parseFloat(/\nSourceFileSize (\d*)/.exec(output)[1]);
         // let NewFiles = parseFloat(/\nNewFiles (\d*)/.exec(output)[1]);
