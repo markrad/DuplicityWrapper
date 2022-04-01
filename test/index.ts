@@ -3,6 +3,7 @@ import path from 'path';
 import { FullResults, VerifyResults, DuplicityWrapper, ListCurrentFilesResults, ListFileEntry, TimeSpanOption, RemoveOlderThanResults, RemoveAllButNFullResults } from '..'
 
 async function main(): Promise<void> {
+/*    
     const app = process.env.DUPLICITY_PATH ?? '/usr/bin/duplicity';
 
     try {
@@ -31,7 +32,7 @@ async function main(): Promise<void> {
     catch (err: any) {
         console.log(`expected error c3 - ${err}`);
     }
-
+*/
     let ts = TimeSpanOption.fromDays(1);
     let d = new Date();
     console.log(ts.addToDate(d).toLocaleString());
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
     console.log(ty.subtractFromDate(d).toLocaleString());
 
 
-    let test = new DuplicityWrapper();
+    let test = DuplicityWrapper.getInstance();
 
 
     console.log(process.cwd());

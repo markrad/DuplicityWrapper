@@ -1,5 +1,6 @@
 // import fs from 'fs';
 import { execSync, spawn } from 'child_process';
+import EventEmitter from 'events';
 import { TimeSpanOption } from './timespanoption';
 export { TimeSpanOption };
 
@@ -104,16 +105,25 @@ export interface RemoveAllButNFullResults extends CommonResults {
     requireForce: boolean;
 }
 
-export class DuplicityWrapper {
+export class DuplicityWrapper extends EventEmitter {
     private _appPath: string;
     private _version: string;
+    private static _instance: DuplicityWrapper = null;
 
     private static readonly days: string[] = ['Mon ', 'Tue ', 'Wed ', 'Thu ', 'Fri ', 'Sat '];
 
-    public constructor(appPath?: string) {
+    private constructor(appPath?: string) {
+        super();
         this._appPath = appPath ?? '/usr/bin/duplicity';
-        //this.check(this.appPath);
         this._version = execSync(`${this._appPath} --version`).toString('utf8').trimEnd();
+    }
+
+    public static getInstance(appPath?: string) {
+        if (!DuplicityWrapper._instance) {
+            DuplicityWrapper._instance = new DuplicityWrapper(appPath);
+        }
+
+        return DuplicityWrapper._instance;
     }
 
     get appPath() {
@@ -343,7 +353,8 @@ export class DuplicityWrapper {
             let errs = '';
             let out = '';
             let cmd = `duplicity ${args.join(' ')}`;
-            console.log(`cmd = '${cmd}'`);
+            DuplicityWrapper._instance.emit('command', cmd);
+            // console.log(`cmd = '${cmd}'`);
             let sp = spawn('duplicity', args, opts);
             let timer: NodeJS.Timer = null;
 
@@ -369,6 +380,9 @@ export class DuplicityWrapper {
 
             sp.on("close", (code: any) => {
                 clearTimeout(timer);
+                DuplicityWrapper._instance.emit('stdout', out);
+                DuplicityWrapper._instance.emit('stderr', errs);
+                DuplicityWrapper._instance.emit('close');
                 resolve({ rc: code, stdout: out, stderr: errs });
             });
         });
