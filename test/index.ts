@@ -61,28 +61,28 @@ async function main(): Promise<void> {
         console.log(`Expected error thrown: ${err.message}`);
     }
     result = await test.commandFull({ target: './testin', url: 'file://testout', passPhrase: 'markmark', cwd: path.resolve(__dirname, '../..'), extraArgs: '--verbosity info' } );
-    console.log(`Returned ${result.rc} full = ${result.FullBackup }`);
+    console.log(`Returned ${result.rc} full = ${result.result.FullBackup }`);
     console.log(result.Output.stdout);
     console.log(result.Output.stderr);
     assert(result.rc == 0, `Bad return code ${result.rc}`);
-    assert(result.Errors == 0, `Errors during processing ${result.Errors}`);
-    assert(result.FullBackup == true, 'Expected full backup');
+    assert(result.result.Errors == 0, `Errors during processing ${result.result.Errors}`);
+    assert(result.result.FullBackup == true, 'Expected full backup');
     // await new Promise<void>((resolve, _reject) => setTimeout(resolve, 5000));
     result = await test.commandIncr({ target: './testin', url: 'file://testout', passPhrase: 'markmark', cwd: path.resolve(__dirname, '../..'), extraArgs: [ '--verbosity', 'info'] } );
-    console.log(`Returned ${result.rc} full = ${result.FullBackup }`);
+    console.log(`Returned ${result.rc} full = ${result.result.FullBackup }`);
     console.log(result.Output.stdout);
     console.log(result.Output.stderr);
     assert(result.rc == 0, `Bad return code ${result.rc}`);
-    assert(result.Errors == 0, `Errors during processing ${result.Errors}`);
-    assert(result.FullBackup == false, 'Expected incremental backup');
+    assert(result.result.Errors == 0, `Errors during processing ${result.result.Errors}`);
+    assert(result.result.FullBackup == false, 'Expected incremental backup');
     await new Promise<void>((resolve, _reject) => setTimeout(resolve, 5000));
     result = await test.commandIncr({ target: './testin', url: 'file://testout', passPhrase: 'markmark', fullIfOlderThan: TimeSpanOption.fromSeconds(3), cwd: path.resolve(__dirname, '../..') });
-    console.log(`Returned ${result.rc} full = ${result.FullBackup }`);
+    console.log(`Returned ${result.rc} full = ${result.result.FullBackup }`);
     console.log(result.Output.stdout);
     console.log(result.Output.stderr);
     assert(result.rc == 0, `Bad return code ${result.rc}`);
-    assert(result.Errors == 0, `Errors during processing ${result.Errors}`);
-    assert(result.FullBackup == true, 'Expected full backup');
+    assert(result.result.Errors == 0, `Errors during processing ${result.result.Errors}`);
+    assert(result.result.FullBackup == true, 'Expected full backup');
     let verify: VerifyResults = await test.commandVerify({ target: './testin', url: 'file://testout', passPhrase: 'markmark', cwd: path.resolve(__dirname, '../..'), compareData: false })
     console.log(`Compared ${verify.FilesCompared}; Differences ${verify.DifferencesFound}`);
     console.log(`Last full backup at ${verify.LastFullBackupDate.toLocaleString()}`);

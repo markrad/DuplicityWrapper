@@ -61,22 +61,25 @@ export interface CommandResult extends ConsoleOutput {
 
 export interface CommonResults {
     rc: number;
+    command: string,
     Output: ConsoleOutput;
 }
 
 export interface FullResults extends CommonResults {
-    ElapsedTime: number;
-    SourceFiles: number;
-    SourceFileSize: number;
-    NewFiles: number;
-    NewFileSize: number;
-    DeletedFiles: number;
-    ChangedFiles: number;
-    ChangedFileSize: number;
-    DeltaEntries: number;
-    TotalDestinationSizeChange: number;
-    Errors: number,
-    FullBackup: boolean;
+    result: {
+        ElapsedTime: number;
+        SourceFiles: number;
+        SourceFileSize: number;
+        NewFiles: number;
+        NewFileSize: number;
+        DeletedFiles: number;
+        ChangedFiles: number;
+        ChangedFileSize: number;
+        DeltaEntries: number;
+        TotalDestinationSizeChange: number;
+        Errors: number,
+        FullBackup: boolean;
+    }
 }
 
 export interface IncrResults extends FullResults { }
@@ -187,7 +190,7 @@ export class DuplicityWrapper extends EventEmitter {
                 let matches = /Verify complete: (\d*) files compared, (\d*) /.exec(rc.stdout);
                 let backup = /Last full backup date: (.*)/.exec(rc.stdout);
                 if (matches == null || backup == null) reject(new Error('Unable to parse verify output'));
-                resolve({ rc: rc.rc, FilesCompared: parseInt(matches[1]), DifferencesFound: parseInt(matches[2]), LastFullBackupDate: new Date(backup[1]), Output: { stdout: rc.stdout, stderr: rc.stderr } });
+                resolve({ rc: rc.rc, command: args[0], FilesCompared: parseInt(matches[1]), DifferencesFound: parseInt(matches[2]), LastFullBackupDate: new Date(backup[1]), Output: { stdout: rc.stdout, stderr: rc.stderr } });
             }
             catch (err) {
                 reject(err);
@@ -221,7 +224,7 @@ export class DuplicityWrapper extends EventEmitter {
                     let filename = parts.slice(5).join(' ');
                     data.push({ FileName: filename, FileTime: timestamp });
                 });
-                resolve({ rc: rc.rc, Entries: data, Output: { stdout: rc.stdout, stderr: rc.stderr } });
+                resolve({ rc: rc.rc, command: args[0], Entries: data, Output: { stdout: rc.stdout, stderr: rc.stderr } });
             }
             catch (err) {
                 reject(err);
@@ -246,7 +249,7 @@ export class DuplicityWrapper extends EventEmitter {
                 if (options.cwd) opts['cwd'] = options.cwd;
 
                 let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
-                let data: RemoveOlderThanResults = { rc: rc.rc, requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Entries: [], Output: { stdout: rc.stdout, stderr: rc.stderr} };
+                let data: RemoveOlderThanResults = { rc: rc.rc, command: args[0], requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Entries: [], Output: { stdout: rc.stdout, stderr: rc.stderr} };
                 if (rc.stdout.indexOf('No old backup sets found') > -1) {
                     data.Entries = rc.stdout.split('\n').filter((value: string) => DuplicityWrapper.days.includes(value.substring(0, 4))).map((value) => new Date(value));
                 }
@@ -269,7 +272,7 @@ export class DuplicityWrapper extends EventEmitter {
                 if (options.cwd) opts['cwd'] = options.cwd;
 
                 let rc = await DuplicityWrapper.runCommand(args, opts, options.timeout ?? 0);
-                let data: RemoveAllButNFullResults = { rc: rc.rc, requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Output: { stderr: rc.stderr, stdout: rc.stdout} };
+                let data: RemoveAllButNFullResults = { rc: rc.rc, command: args[0], requireForce: (-1 != rc.stdout.indexOf('Rerun command with --force')), Output: { stderr: rc.stderr, stdout: rc.stdout} };
                 resolve(data);
             }
             catch (err) {
@@ -354,7 +357,6 @@ export class DuplicityWrapper extends EventEmitter {
             let out = '';
             let cmd = `duplicity ${args.join(' ')}`;
             DuplicityWrapper._instance.emit('command', cmd);
-            // console.log(`cmd = '${cmd}'`);
             let sp = spawn('duplicity', args, opts);
             let timer: NodeJS.Timer = null;
 
@@ -389,33 +391,27 @@ export class DuplicityWrapper extends EventEmitter {
     }
 
     private static parseOutput(result: CommandResult, command: string): FullResults {
-        // let SourceFiles = parseFloat(/\nSourceFiles (\d*)/.exec(output)[1]);
-        // let SourceFileSize = parseFloat(/\nSourceFileSize (\d*)/.exec(output)[1]);
-        // let NewFiles = parseFloat(/\nNewFiles (\d*)/.exec(output)[1]);
-        // let NewFileSize = parseFloat(/\nNewFileSize (\d*)/.exec(output)[1]);
-        // let DeletedFiles = parseInt(/\nDeletedFiles (\d*)/.exec(output)[1]);
-        // let ChangedFiles = parseInt(/\nChangedFiles (\d*)/.exec(output)[1]);
-        // let ChangedFileSize = parseInt(/\nChangedFileSize (\d*)/.exec(output)[1]);
-        // let DeltaEntries = parseInt(/\nDeltaEntries (\d*)/.exec(output)[1]);
-        // let TotalDestinationSizeChange = parseInt(/\nTotalDestinationSizeChange (\d*)/.exec(output)[1]);
         if (result.rc != 0) {
             throw new Error(`Return code = ${result.rc}: ${result.stderr}`);
         }
         try {
             let ret: FullResults = {
                 rc: result.rc,
-                ElapsedTime: parseFloat(/\nElapsedTime (\d*\.\d*)/.exec(result.stdout)[1]),
-                SourceFiles: parseInt(/\nSourceFiles (\d*)/.exec(result.stdout)[1]),
-                SourceFileSize: parseInt(/\nSourceFileSize (\d*)/.exec(result.stdout)[1]),
-                NewFiles: parseInt(/\nNewFiles (\d*)/.exec(result.stdout)[1]),
-                NewFileSize: parseInt(/\nNewFileSize (\d*)/.exec(result.stdout)[1]),
-                DeletedFiles: parseInt(/\nDeletedFiles (\d*)/.exec(result.stdout)[1]),
-                ChangedFiles: parseInt(/\nChangedFiles (\d*)/.exec(result.stdout)[1]),
-                ChangedFileSize: parseInt(/\nChangedFileSize (\d*)/.exec(result.stdout)[1]),
-                DeltaEntries: parseInt(/\nDeltaEntries (\d*)/.exec(result.stdout)[1]),
-                TotalDestinationSizeChange: parseInt(/\nTotalDestinationSizeChange (\d*)/.exec(result.stdout)[1]),
-                Errors: parseInt(/\nErrors (\d*)/.exec(result.stdout)[1]),
-                FullBackup: command == 'full' ? true : null != /\nLast full backup is too old/.exec(result.stdout),
+                command: command,
+                result: {
+                    ElapsedTime: parseFloat(/\nElapsedTime (\d*\.\d*)/.exec(result.stdout)[1]),
+                    SourceFiles: parseInt(/\nSourceFiles (\d*)/.exec(result.stdout)[1]),
+                    SourceFileSize: parseInt(/\nSourceFileSize (\d*)/.exec(result.stdout)[1]),
+                    NewFiles: parseInt(/\nNewFiles (\d*)/.exec(result.stdout)[1]),
+                    NewFileSize: parseInt(/\nNewFileSize (\d*)/.exec(result.stdout)[1]),
+                    DeletedFiles: parseInt(/\nDeletedFiles (\d*)/.exec(result.stdout)[1]),
+                    ChangedFiles: parseInt(/\nChangedFiles (\d*)/.exec(result.stdout)[1]),
+                    ChangedFileSize: parseInt(/\nChangedFileSize (\d*)/.exec(result.stdout)[1]),
+                    DeltaEntries: parseInt(/\nDeltaEntries (\d*)/.exec(result.stdout)[1]),
+                    TotalDestinationSizeChange: parseInt(/\nTotalDestinationSizeChange (\d*)/.exec(result.stdout)[1]),
+                    Errors: parseInt(/\nErrors (\d*)/.exec(result.stdout)[1]),
+                    FullBackup: command == 'full' ? true : null != /\nLast full backup is too old/.exec(result.stdout),
+                },
                 Output: { stdout: result.stdout, stderr: result.stderr },
             }
             return ret;
